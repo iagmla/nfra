@@ -36,9 +36,7 @@ def create_disk(
     create_command = ("qemu-img create -f " +
         format_type +
         " " +
-        name +
-        "." +
-        format_type +
+        os.path.join(NFRA_VM_PATH, name+"."+format_type) +
         " " +
         str(size)+
         "M")
