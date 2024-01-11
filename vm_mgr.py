@@ -43,7 +43,7 @@ def create_disk(
         str(size)+
         "M")
     output = run(create_command, shell=True)
-    return name
+    return name + "." + format_type
 
 # Set libvirt xml name
 def set_xml_name(
