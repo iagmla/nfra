@@ -8,7 +8,5 @@ def open_hyper_conn():
         raise print("Failed to open connection to qemu:///system")
     return conn
 
-vcpus = conn.getMaxVcpus(None)
-print("Maximum support virtual CPUs: {}".format(vcpus))
-
-conn.close()
+def close_hyper_conn(conn):
+    conn.close()

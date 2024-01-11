@@ -4,7 +4,7 @@ from subprocess import run
 import os
 import xml.etree.ElementTree as ET
 import libvirt
-import nfra_config
+from nfra_config import *
 from libvirt_common import open_hyper_conn
 
 # Create a random disk image name (length of 16 preferred)
@@ -32,7 +32,7 @@ def create_disk(
     format_type : str,
     name_length : int
  ) -> str:
-    name = create_random_disk_name(length=name_length)
+    name = create_uuid_disk_name(length=name_length)
     create_command = ("qemu-img create -f " +
         format_type +
         " " +
@@ -40,7 +40,7 @@ def create_disk(
         "." +
         format_type +
         " " +
-        str(size_mb)+
+        str(size)+
         "M")
     output = run(create_command, shell=True)
     return name
@@ -128,14 +128,14 @@ def create_vm(
     disk_size : int,
     disk_format : str,
 ) -> str:
-    dest_xml_file = os.path.join(NFRA_VM_XML_PATH, name, ".xml")
+    dest_file = os.path.join(NFRA_VM_XML_PATH, name+".xml")
     disk_uuid = create_disk(size=disk_size, format_type=disk_format, name_length=16)
-    set_xml_name(template_file=template_file, name=name)
-    set_xml_uuid(template_file=template_file, uuid=disk_uuid)
-    set_xml_memory(template_file=template_file, size=memory_size)
-    set_xml_vcpus(template_file=template_file, vcpus=vcpus)
-    set_xml_disk(template_file=template_file, file=os.path.join(NFRA_VM_XML_PATH, disk_uuid))
-    return dest_xml_file
+    set_xml_name(template_file=template_file, dest_file=dest_file, name=name)
+    set_xml_uuid(template_file=template_file, dest_file=dest_file, uuid=disk_uuid)
+    set_xml_memory(template_file=template_file, dest_file=dest_file, size=memory_size)
+    set_xml_vcpu(template_file=template_file, dest_file=dest_file, vcpus=vcpus)
+    set_xml_disk(template_file=template_file, dest_file=dest_file, file=os.path.join(NFRA_VM_XML_PATH, disk_uuid))
+    return dest_file
 
 def start_vm(
     file : str
@@ -156,11 +156,12 @@ def start_vm(
         print(dom0.info())
     else:
         output = conn.createxml(file)
+    close_hyper_conn(conn)
     return True
 
 vm_xml_file = create_vm(
-    template_file=os.path.join(NFRA_TEMPLATES, vm_template.xml),
-    name=debian0,
+    template_file=os.path.join(NFRA_TEMPLATES, "vm_template.xml"),
+    name="debian0",
     memory_size=1024,
     vcpus=1,
     disk_size=5120,
