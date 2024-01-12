@@ -1,5 +1,5 @@
 NFRA_USERNAME = "iagmla"
 NFRA_ISO_PATH = "/home/iagmla/code/nfra/iso"
-NFRA_VM_PATH = "/home/iagmla/code/nfra/vm"
+NFRA_VM_PATH = "/var/lib/libvirt/images"
 NFRA_VM_XML_PATH = "/home/iagmla/code/nfra/vm"
 NFRA_TEMPLATES = "/home/iagmla/code/nfra"

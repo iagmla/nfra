@@ -6,24 +6,13 @@ import xml.etree.ElementTree as ET
 import libvirt
 from nfra_config import *
 from libvirt_common import open_hyper_conn
+import uuid
 
 # Create a random disk image name (length of 16 preferred)
 
-def create_uuid_disk_name(length : int) -> str:
-    name_bytes = os.urandom(length)
-    name = ""
-    for b in name_bytes:
-        name += hex(b)[2:]
-    # Format for UUID
-    uuid = (name[:8] + "-" +
-        name[8:12] +
-        "-" +
-        name[12:16] +
-        "-" +
-        name[16:20] +
-        "-" +
-        name[20:])
-    return uuid
+def create_uuid_disk_name() -> str:
+    u = uuid.uuid4()
+    return str(u)
 
 # Create a qemu disk image for the VM (size in MB)
 
@@ -32,7 +21,7 @@ def create_disk(
     format_type : str,
     name_length : int
  ) -> str:
-    name = create_uuid_disk_name(length=name_length)
+    name = create_uuid_disk_name()
     create_command = ("qemu-img create -f " +
         format_type +
         " " +
@@ -41,7 +30,7 @@ def create_disk(
         str(size)+
         "M")
     output = run(create_command, shell=True)
-    return name + "." + format_type
+    return name
 
 # Set libvirt xml name
 def set_xml_name(
@@ -126,13 +115,15 @@ def create_vm(
     disk_size : int,
     disk_format : str,
 ) -> str:
+    print("Creating VM", name)
     dest_file = os.path.join(NFRA_VM_XML_PATH, name+".xml")
     disk_uuid = create_disk(size=disk_size, format_type=disk_format, name_length=16)
+
     set_xml_name(template_file=template_file, dest_file=dest_file, name=name)
-    set_xml_uuid(template_file=template_file, dest_file=dest_file, uuid=disk_uuid)
-    set_xml_memory(template_file=template_file, dest_file=dest_file, size=memory_size)
-    set_xml_vcpu(template_file=template_file, dest_file=dest_file, vcpus=vcpus)
-    set_xml_disk(template_file=template_file, dest_file=dest_file, file=os.path.join(NFRA_VM_XML_PATH, disk_uuid))
+    set_xml_uuid(template_file=dest_file, dest_file=dest_file, uuid=disk_uuid)
+    set_xml_memory(template_file=dest_file, dest_file=dest_file, size=memory_size)
+    set_xml_vcpu(template_file=dest_file, dest_file=dest_file, vcpus=vcpus)
+    set_xml_disk(template_file=dest_file, dest_file=dest_file, file=os.path.join(NFRA_VM_XML_PATH, disk_uuid+"."+disk_format))
     return dest_file
 
 def start_vm(
@@ -164,4 +155,4 @@ vm_xml_file = create_vm(
     vcpus=1,
     disk_size=5120,
     disk_format="raw")
-
+print(vm_xml_file)
